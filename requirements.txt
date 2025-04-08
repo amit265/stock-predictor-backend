@@ -2,3 +2,5 @@ flask
 prophet
 yfinance
 pandas
+flask-cors
+
