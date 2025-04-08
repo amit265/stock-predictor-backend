@@ -2,7 +2,7 @@ name: Scheduled Firestore Comparison
 
 on:
   schedule:
-    - cron: "40 11 * * *"  # Runs every day at 7 PM IST (13:30 UTC)
+    - cron: "30 12 * * *"  # Runs every day at 7 PM IST (13:30 UTC)
   workflow_dispatch:     # allows manual trigger too
 
 jobs:
