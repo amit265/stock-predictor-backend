@@ -3,9 +3,36 @@ from flask_cors import CORS
 from prophet import Prophet
 import yfinance as yf
 import pandas as pd
+import os
+from google.cloud import firestore
 
 app = Flask(__name__)
 CORS(app, origins=["https://stock-predictor-ivory.vercel.app"])  # ✅ Restrict to your frontend domain
+# Set the path to your JSON key file
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "firebase-key.json"
+
+# Initialize Firestore client
+db = firestore.Client()
+
+# Example usage
+doc_ref = db.collection("test_collection").document("sample_doc")
+doc_ref.set({
+    "message": "Hello from Python!",
+    "timestamp": firestore.SERVER_TIMESTAMP
+})
+
+# @app.route('/test-firestore')
+# def test_firestore():
+#     try:
+#         doc_ref = db.collection("test").document("ping")
+#         doc_ref.set({
+#             "message": "Hello from Flask!",
+#             "timestamp": firestore.SERVER_TIMESTAMP
+#         })
+#         return jsonify({"success": True, "message": "Data written to Firestore!"})
+#     except Exception as e:
+#         return jsonify({"success": False, "error": str(e)}), 500
+
 
 # ----------- Prediction Route -------------
 @app.route('/predict', methods=['GET'])
@@ -42,10 +69,47 @@ def predict_stock():
         prediction = prediction.round(2)
         prediction['ds'] = prediction['ds'].astype(str)  # Convert to string
 
+        # Save each prediction as a separate Firestore document
+        for row in prediction.to_dict(orient='records'):
+            doc_ref = db.collection("predictions").document(f"{symbol.upper()}_{row['ds']}")
+            doc_ref.set({
+                "symbol": symbol.upper(),
+                "target_date": row["ds"],
+                "predicted_price": row["yhat"],
+                "yhat_lower": row["yhat_lower"],
+                "yhat_upper": row["yhat_upper"],
+                "predicted_on": str(pd.Timestamp.now().date()),
+                "created_at": firestore.SERVER_TIMESTAMP
+            })
+
         return jsonify(prediction.to_dict(orient='records'))
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ----------- comparison -------------
+
+
+@app.route('/get-comparisons', methods=['GET'])
+def get_comparisons():
+    symbol = request.args.get('stock')
+    if not symbol:
+        return jsonify({"error": "Missing stock symbol"}), 400
+
+    try:
+        comparisons = db.collection('comparisons') \
+            .where('symbol', '==', symbol.upper()) \
+            .order_by('target_date', direction=firestore.Query.DESCENDING) \
+            .stream()
+
+        data = [doc.to_dict() for doc in comparisons]
+
+        return jsonify(data)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 
 # ----------- Historical Data Route -------------

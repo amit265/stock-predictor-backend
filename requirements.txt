@@ -1,6 +1,8 @@
-flask
-prophet
-yfinance
-pandas
-flask-cors
-
+Flask>=2.3.2
+flask-cors>=4.0.0
+prophet>=1.1.5
+yfinance>=0.2.36
+pandas>=2.0.3
+google-cloud-firestore>=2.11.1
+firebase-admin>=6.4.0
+pystan>=2.19.1.1
