@@ -1,28 +1,32 @@
-# .github/workflows/compare.yml
-name: Compare Predictions
+name: Scheduled Firestore Comparison
 
 on:
   schedule:
-    - cron: "30 13 * * *"  # Runs every day at 7 PM IST (13:30 UTC)
-  workflow_dispatch:
+    - cron: '0 6 * * *'  # every day at 6 AM UTC
+  workflow_dispatch:     # allows manual trigger too
 
 jobs:
   compare:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: 3.10
 
       - name: Install dependencies
         run: |
-          pip install yfinance firebase-admin
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Set up Firebase credentials
+        run: echo "${{ secrets.FIREBASE_KEY }}" > firebase-key.json
 
       - name: Run comparison script
         env:
           GOOGLE_APPLICATION_CREDENTIALS: firebase-key.json
-        run: |
-          python compare_predictions.py
+        run: python compare_predictions.py
