@@ -44,5 +44,28 @@ def predict_stock():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/history")
+def get_history():
+    stock = request.args.get("stock")
+    range_period = request.args.get("range", "1y")  # default to 1 year
+
+    if not stock:
+        return jsonify({"error": "No stock symbol provided"}), 400
+
+    try:
+        ticker = yf.Ticker(stock.strip().upper())  # ensure clean symbol
+        hist = ticker.history(period=range_period, interval="1d")  # add interval
+
+        if hist.empty:
+            return jsonify({"error": f"No data found for symbol: {stock}"}), 404
+
+        data = [{"ds": str(date.date()), "close": round(row["Close"], 2)} for date, row in hist.iterrows()]
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=10000)
