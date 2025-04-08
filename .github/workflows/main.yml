@@ -1,0 +1,28 @@
+# .github/workflows/compare.yml
+name: Compare Predictions
+
+on:
+  schedule:
+    - cron: "30 13 * * *"  # Runs every day at 7 PM IST (13:30 UTC)
+  workflow_dispatch:
+
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install yfinance firebase-admin
+
+      - name: Run comparison script
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: firebase-key.json
+        run: |
+          python compare_predictions.py
