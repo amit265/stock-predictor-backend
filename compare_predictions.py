@@ -3,6 +3,7 @@ from firebase_admin import credentials, firestore
 import yfinance as yf
 from datetime import datetime, timedelta
 import pytz
+import pandas as pd
 
 # Initialize Firebase
 cred = credentials.Certificate("firebase-key.json")  # your service account file
@@ -18,7 +19,10 @@ def fetch_actual_price(symbol, target_date):
         data = yf.download(symbol, start=target_date, end=target_date, interval="1d")
         if data.empty:
             return None
-        return round(data['Close'].iloc[0], 2)
+        price = data['Close'].iloc[0]
+        if isinstance(price, pd.Series):
+            price = price.values[0]  # convert to scalar
+        return round(float(price), 2)  # ensure it's a float
     except Exception as e:
         print(f"Error fetching {symbol}: {e}")
         return None
