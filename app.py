@@ -5,6 +5,7 @@ import yfinance as yf
 import pandas as pd
 import os
 from google.cloud import firestore
+from compare_predictions import compare_predictions
 
 app = Flask(__name__)
 CORS(app, origins=["https://stock-predictor-ivory.vercel.app"])  # ✅ Restrict to your frontend domain
@@ -136,6 +137,26 @@ def get_history():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# -----------manual-compare -------------
+
+
+@app.route("/manual-compare")
+def manual_trigger():
+    try:
+        compare_predictions()
+        return jsonify({"status": "success", "message": "Comparison completed manually!"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# -----------default -------------
+
+@app.route("/", methods=["GET"])
+def home_default():
+    try:
+        return jsonify({"status": "success", "message": "server running!"})
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 # ----------- Main App Runner -------------
