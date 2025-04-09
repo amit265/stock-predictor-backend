@@ -12,4 +12,9 @@ jobs:
     steps:
       - name: Trigger /manual-compare endpoint
         run: |
-          curl -X GET https://stock-predictor-backend-4tp3.onrender.com/manual-compare
+          response=$(curl -s -o response.json -w "%{http_code}" https://stock-predictor-backend-4tp3.onrender.com/manual-compare)
+          cat response.json
+          if [ "$response" -ne 200 ]; then
+            echo "❌ Failed to trigger manual-compare (HTTP $response)"
+            exit 1
+          fi

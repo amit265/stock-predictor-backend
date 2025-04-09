@@ -6,3 +6,4 @@ pandas>=2.0.3
 google-cloud-firestore>=2.11.1
 firebase-admin>=6.4.0
 pystan>=2.19.1.1
+plotly
