@@ -16,16 +16,21 @@ today = datetime.now(IST).date().isoformat()
 
 def fetch_actual_price(symbol, target_date):
     try:
-        data = yf.download(symbol, start=target_date, end=target_date, interval="1d")
+        target = datetime.fromisoformat(target_date)
+        next_day = (target + timedelta(days=1)).date().isoformat()
+        data = yf.download(symbol, start=target_date, end=next_day, interval="1d")
+
         if data.empty:
+            print(f"No data for {symbol} on {target_date}")
             return None
+
         price = data['Close'].iloc[0]
-        if isinstance(price, pd.Series):
-            price = price.values[0]  # convert to scalar
-        return round(float(price), 2)  # ensure it's a float
+        return round(float(price), 2)
+
     except Exception as e:
         print(f"Error fetching {symbol}: {e}")
         return None
+
 
 def compare_predictions():
     predictions_ref = db.collection("predictions")
